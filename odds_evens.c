@@ -136,19 +136,18 @@ void reduce_siblings(turn_t *parent, turn_t *choice) {
 		return;
 	}
 
-	print_turn(parent, TRUE, TRUE);
 	int i;
 	turn_t *tmp;
 	for (i = 0; i < parent->num_children; i++) {
 		tmp = parent->children[i];
 		if (tmp != choice) {
-			printf("Freeing %p...\n", tmp);
+			/* printf("Freeing %p...\n", tmp); */
 			free_tree(tmp);
 		}
 	}
 	
 	/* Substitute array of children with just winning child */
-	free(parent->children);
+	realloc(parent->children, sizeof(turn_t*));
 	*parent->children = choice;
 	kill_count += (parent->num_children - 1);
 	parent->num_children = 1;
@@ -163,14 +162,6 @@ void assess_children(turn_t *parent) {
 	for (i = 0; i < parent->num_children; i++) {
 		child = parent->children[i];
 		if (child->move.entry >= 5 && child->win_state != EMPTY_STATE) {
-			/* printf("\nWinning child\n");
-			print_board(child);
-			turn_t *tmp = child;
-			while (tmp != NULL) {
-				printf("(%d,%d)", tmp->win_state, tmp->dec_state);
-				tmp = tmp->parent;
-			}
-			printf("\n"); */
 			/* No siblings needed; free all excl. current (winning) child */
 			reduce_siblings(parent, child);
 						
@@ -187,6 +178,7 @@ void assess_children(turn_t *parent) {
 			grand_parent->win_state = parent->children[0]->win_state;
 			g_grand_parent->dec_state = BAD_STATE;	/* g_parent is avoided */
 			
+			/*
 			printf("ALL_BAD_STATE\n%s%s\n", BANNER, BANNER);
 			printf("Great_Grand_parent:\n");
 			print_turn(parent->parent->parent, TRUE, TRUE);
@@ -196,6 +188,7 @@ void assess_children(turn_t *parent) {
 			print_turn(parent, TRUE, TRUE);
 			printf("\nChild:\n");
 			print_turn(parent->children[0], FALSE, TRUE);
+			*/
 			
 			/* First, reduce BAD_STATES to one */
 			reduce_siblings(grand_parent, parent);	/*NB: could be any child */
