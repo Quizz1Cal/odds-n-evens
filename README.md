@@ -8,7 +8,10 @@ Rules of the game:
 IMPLEMENTATION HISTORY: 
 - Draft 1: Attempt to create nodes, each storing boards, moves, player tags. This was deemed to be highly inefficient with memory and time. 
 - Draft 2: Attempt to create nodes with reduced memory demand by only storing moves made; boards are implicitly inferred.
+
 Problems:
 - Reducing the amount actually generated (memory efficiency)
 - How to implement dynamic array, whilst in a struct
 - Determining overly recurrent cases
+- Keeping paths stored so that 'forced win scenarios' can be remembered
+
