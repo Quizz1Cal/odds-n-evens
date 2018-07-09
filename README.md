@@ -5,11 +5,9 @@ Rules of the game:
 - A number disappears 6 moves later e.g. when player 1 writes a 7, the 1 that they initially wrote vanishes AFTER the 7 is written down.
 - Aim of game is for a player to get 3 in a row. No ties allowed. 
 
-IMPLEMENTATION HISTORY
-Draft 1: Attempt to create nodes, each storing boards, moves, player tags.
-This was deemed to be highly inefficient with memory and time. 
-Draft 2: Attempt to create nodes with reduced memory demand by only storing
-moves made; boards are implicitly inferred.
+IMPLEMENTATION HISTORY: 
+- Draft 1: Attempt to create nodes, each storing boards, moves, player tags. This was deemed to be highly inefficient with memory and time. 
+- Draft 2: Attempt to create nodes with reduced memory demand by only storing moves made; boards are implicitly inferred.
 
 Problems:
 - Reducing the amount actually generated (memory efficiency)
