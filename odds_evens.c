@@ -360,7 +360,7 @@ int three_in_row(int val_stor[]) {
 	return (val_stor[0] % BASE == PLAYER_EVEN) ? PLAYER_EVEN : PLAYER_ODD;
 }
 
-/* Prints information for a given turn */
+/* Prints information for given turn */
 void print_turn(turn_t *turn, int print_children, int board_print) {
 	assert(turn);
 	printf("Me: %p \t Parent: %p\n", turn, turn->parent);
