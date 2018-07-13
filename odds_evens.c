@@ -1,7 +1,7 @@
 /**=================================DESCRIPTION=============================**/
 
 /* The program attempts to brute-force solve a game that, to my knowledge, was
- * conceived by an associate and titled "Odds and evens". Highly similar to
+ * invented by an associate and titled "Odds and evens". Highly similar to
  * tic-tac-toe, the basic rules of the game are as follows:
  *  - One player is designated odd (and goes first) and the other even. 
  *  - Given a 3x3 square grid, players take turns writing numbers into squares 
@@ -22,7 +22,6 @@
  * for a given turn, facilitating an automated second player. 
  *
  * Author: Callum Holmes
- * Conceiver of idea (to my knowledge): Thomas in my MAST20009 tutorial
  * Date: July 2018
  *
  * Implementation history:
@@ -437,7 +436,7 @@ int simulator(turn_t *root, int hints, int board_print, int one_player,
         } else if (!one_player) {
             printf("EVEN WINS!");
         }
-        if (one_player && !comp_turn) {
+        if (one_player && comp_turn) {
             printf("... AND HUMANITY WON! AI CANNOT USURP US!\n");
         }
         return EXIT_SUCCESS;
@@ -478,7 +477,9 @@ int simulator(turn_t *root, int hints, int board_print, int one_player,
             printf("Enter move (row x col): ");
             int row, col;
             row = col = BAD_ENTRY;
-            scanf("%d x %d", &row, &col);
+            while (scanf("%dx%d", &row, &col) != 2) {
+            	printf("Invalid format, must be row# x col#...\n");
+            };
             /* Look up user entry in children */
             int i;
             for (i = 0; i < curr->num_children; i++) {
