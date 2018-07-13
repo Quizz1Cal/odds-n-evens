@@ -1,7 +1,7 @@
 /**=================================DESCRIPTION=============================**/
 
 /* The program attempts to brute-force solve a game that, to my knowledge, was
- * invented by an associate and titled "Odds and evens". Highly similar to
+ * conceived by an associate and titled "Odds and evens". Highly similar to
  * tic-tac-toe, the basic rules of the game are as follows:
  *  - One player is designated odd (and goes first) and the other even. 
  *  - Given a 3x3 square grid, players take turns writing numbers into squares 
@@ -22,6 +22,7 @@
  * for a given turn, facilitating an automated second player. 
  *
  * Author: Callum Holmes
+ * Conceiver of idea (to my knowledge): Thomas in my MAST20009 tutorial
  * Date: July 2018
  *
  * Implementation history:
