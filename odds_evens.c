@@ -176,11 +176,8 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-/**==========================================================================**/
-/**===========================FUNCTION DEFINITIONS===========================**/
-/**==========================================================================**/
+/**=========================TURN CREATION FUNCTIONS==========================**/
 
-/**==============================TURN CREATION===============================**/
 /* Allocates turn_t and returns pointer */
 turn_t *make_empty_turn(void) {
 	turn_t *turn = (turn_t*)malloc(sizeof(turn_t));
@@ -289,7 +286,7 @@ int three_in_row(int val_stor[]) {
 	return TRUE;
 }
 
-/**=============================GAME SIMULATION==============================**/
+/**========================GAME SIMULATION FUNCTIONS=========================**/
 /* Finds all children turns for a given parent and links parent to children */
 void create_children(turn_t *parent) {
 	assert(parent);
@@ -414,7 +411,7 @@ void free_tree(turn_t *root, int free_root) {
 	}
 }
 	
-/**============================GAME EXPLORATION==============================**/
+/**=======================GAME EXPLORATION FUNCTIONS=========================**/
 
 /* Turn navigation */
 int simulator(turn_t *root, int hints, int board_print, int one_player, 
@@ -543,7 +540,8 @@ best_child_t best_child(turn_t *parent) {
 	return curr_best;
 }
 
-/**===============================PRINT INFO=================================**/
+/**==========================PRINTING FUNCTIONS============================**/
+
 /* Prints information for a given turn */
 void print_turn(turn_t *turn, int print_children, int board_print, int hints) {
 	assert(turn);
@@ -602,7 +600,7 @@ void help_information(void) {
 	return;
 }
 
-/**===============================ANALYTICAL=================================**/
+/**==========================ANALYTICAL FUNCTIONS============================**/
 /* Initialise data_t and return copy */
 data_t *make_empty_data(int num_children) {
 	data_t *new = (data_t*)malloc(sizeof(data_t));
