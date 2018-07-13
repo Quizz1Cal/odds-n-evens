@@ -10,7 +10,7 @@ Rules of the game:
 IMPLEMENTATION HISTORY: 
 - Draft 1: Attempt to create nodes, each storing boards, moves, player tags. This was deemed to be highly inefficient with memory and time. 
 - Draft 2: Attempt to create nodes with reduced memory demand by only storing moves made; boards are implicitly inferred.
-- Draft 3: Attempted to and then foregave deletion of un-necessary pathways. Incorporated a simulator and an "AI" functioanality so that upon execution, a user can play against a computer, or against a second player on same computer (or themselves). 
+- Draft 3: Attempted to and then foregave deletion of un-necessary pathways. Incorporated a simulator and an "AI" functionality so that upon execution, a user can play against a computer, or against a second player on same computer (or themselves). 
 
 Author: Callum Holmes
 Creator of game, to my knowledge: Thomas in my MAST20009 tutorial
