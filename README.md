@@ -13,5 +13,6 @@ IMPLEMENTATION HISTORY:
 - Draft 3: Attempted to and then foregave deletion of un-necessary pathways. Incorporated a simulator and an "AI" functioanality so that upon execution, a user can play against a computer, or against a second player on same computer (or themselves). 
 
 Author: Callum Holmes
+Creator of game, to my knowledge: Thomas in my MAST20009 tutorial
 
 Last Updated: July 2018
