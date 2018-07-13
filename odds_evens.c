@@ -1,23 +1,42 @@
-/*	Description 
-	Attempted proof of the forceability of "odds & evens". 
-	
- 	IF ODD PLAYER CAN MAKE A WIN: Kill all siblings, take this path to win.
- 	IF EVEN PLAYER CAN MAKE A WIN: Kill parent, that is bad move.
- 	Ensure my code allows for odd and even wins
-*/
+/**=================================DESCRIPTION=============================**/
 
-/* 
-gcc -g -o run odds_evens.c
-gdb --annotate=3 run.exe
-*/
-
-/** Libraries and constants  **/
+/* The program attempts to brute-force solve a game that, to my knowledge, was
+ * invented by an associate and titled "Odds and evens". Highly similar to
+ * tic-tac-toe, the basic rules of the game are as follows:
+ *  - One player is designated odd (and goes first) and the other even. 
+ * 	- Given a 3x3 square grid, players take turns writing numbers into squares 
+ *		increasing as they go e.g. player 1 writes 1, player 2 then writes 2, 
+ *		then player 1 will write 3, etc.
+ *	- The maximum number of numbers each player can have on the board is three.
+ *		hence, when player 1 writes a 7, the 1 must be erased AFTER the 7 is 
+ *		written down. When player 1 writes 8, the 2 is erased AFTER, etc...
+ *	- Aim of game is for one player to get 3 in a row. 
+ *	- Ties are permissible at each player's discretion.
+ * The program generates board states for a specified depth of generation, and
+ * simultaneously evaluates winning moves; moves that would be avoided; and
+ * moves that ultimately, force a win in either player's favour. 
+ * Given sufficient generation, it can be shown that player 1 can always win
+ * by playing their first move on any central point on the 4 board edges.
+ * The simulator called at runtime allows for users to play against 
+ * themselves. An "AI" function best_child can be used to determine best move
+ * for a given turn, facilitating an automated second player. 
+ *
+ * Author: Callum Holmes
+ * Date: July 2018
+ *
+ * Implementation history:
+ *	1.	Used turn structures storing every board state explicitly. Memory waste.
+ *	2.	Used structures storing moves, and board states derived implicitly.
+ 		Serious errors were encountered when attempting to simplify tree
+ 		pathways to maximise memory availability for deeper generations.
+ *	3.	Excluded any attempt to simplify/delete tree pathways, leaving all
+ 		board states completely available. 
+ */
+ 
+/**==========================LIBRARIES AND CONSTANTS=========================**/
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <string.h>
 #include <ctype.h>
 #include <assert.h>
 
@@ -25,242 +44,154 @@ gdb --annotate=3 run.exe
 #define COLS 3
 #define NUM_SQUARES 9
 #define MAX_MOVES 6
-#define EMPTY_STATE -1
-#define BAD_STATE -2
-#define PLAYER_ODD 1
-#define PLAYER_EVEN 0
-#define BASE 2
-#define TRUE 1
 #define FALSE 0
-#define BANNER "==========================================================\n"
+#define TRUE 1
+#define EMPTY 0
+#define BASE 2
+#define ANY_CHILD -1
+#define ZERO_CHAR '0'
+#define Y_CHAR 'y'
+#define BAD_ENTRY 11
+#define BANNER "=============================================================\n"
 
-/** Typedefs and structs **/
+/**======================TYPEDEFS, STRUCTS, PROTOTYPES=======================**/
 
+/* Board typedef */
 typedef int row_t[ROWS];
-typedef row_t board_t[COLS];	/* Hence board_t[ROW#][COL#] */
+typedef row_t board_t[COLS];	/* i.e. board_t[ROW#][COL#] */
+/* Move information struct */
 typedef struct {
 	int row, col, entry;
 } move_t;
-
-/* Represents a turn; stores move made and points to parent and any children */		
+/* Turn information struct */	
 typedef struct turn_s turn_t;	
-/* Inefficient but apt, small memory cost */
 struct turn_s {
 	move_t move;
 	turn_t *parent;
 	int num_children;
-	int win_state;		/* Flags if a turn wins and for who else EMPTY_STATE */
-	int dec_state;		/* Flags BAD_STATE, meaning smart player won't pick */
+	int win_state;		/* Flag if a turn wins */
+	int bad_state;		/* Flag TRUE if chooosing guarantees opponent wins */
 	turn_t **children;
 };
+/* Generation data storage struct */
+typedef struct {
+	int num_children;
+	int count_num;
+	int count_win;
+	int count_bad;
+} data_t;
+/* Data struct for child optimisation */
+typedef struct {
+	turn_t *best;
+	int depth;
+} best_child_t;
 
-/** Function prototypes **/
+/* Turn creation */
 turn_t *make_empty_turn(void);
 int create_board(turn_t *turn, board_t stor);
 int next_move(turn_t *parent);
-void create_children(turn_t *parent);
-void assess_children(turn_t *parent);
-void generate_children(turn_t *parent, int last_turn);
 int is_game_over(turn_t *turn);
 int three_in_row(int val_stor[]);
-void print_turn(turn_t *turn, int print_children, int board_print);
-void print_board(turn_t *turn);
-void print_move(turn_t *turn);
-void print_history(turn_t *turn);
-turn_t *random_turn(turn_t *root, int depth);
-void free_tree(turn_t *root);
-void reduce_siblings(turn_t *parent, turn_t *choice);
-int turn_navigator(turn_t *new_game);
+/* Game simulation */
+void create_children(turn_t *parent);
+void update_win_states(turn_t *parent);
+void update_bad_states(turn_t *parent);
 void traverse_and_create(turn_t *parent);
+void traverse_and_update(turn_t *parent);
+void generate_children(turn_t *root, int depth);
+void free_tree(turn_t *root, int free_root);
+/* Game exploration */
+int simulator(turn_t *new_game, int hints, int board_print, int one_player, 
+		int comp_turn);
+best_child_t best_child(turn_t *parent);
+/* Printing functions */
+void print_turn(turn_t *turn, int print_children, int board_print, int hints);
+void print_board(turn_t *turn);
+void print_move(turn_t *turn, int hints);
+void help_information(void);
+/* Analytical */
+data_t *make_empty_data(int num_children);
+void traverse_and_analyze(turn_t *parent, int depth, data_t *total, 
+		data_t *depth_total, data_t **depth_sorted);
+void print_depth_data(data_t *depth_total, data_t **depth_sorted);
+void branching_data(turn_t *root, int depth);
 
-/** Main function **/
-
-int kill_count = 0;
-int total = 0;
+/**==============================MAIN FUNCTION===============================**/
 
 int main(int argc, char *argv[]) {
-	srand(time(0));
-	/* Start a new game */
+	/* Simulate a new game */
 	turn_t *new_game = make_empty_turn();
 	assert(new_game);
-	
-	/* Generate rounds for testing */
 	int depth;
-	printf("Input depth of generation: ");
+	printf("Input depth of generation (13 is ideal): ");
 	while ((scanf("%d", &depth)) != 1);
 	generate_children(new_game, depth);
-	printf("\nTotal is %d, kill count %d\n", total, kill_count);
-	printf("%s", BANNER);
-	turn_navigator(new_game);
+	
+	/* Obtain data */
+	printf("Print data for generations (y), or continue (n)? >> ");
+	char c;
+	while ((scanf("%c", &c)) != 1 || !isalpha(c));
+	if (c == 'y') branching_data(new_game, depth);
+	
+	/* Introduction */
+	printf("\n%s", BANNER);
+	printf("This is the turn simulator for the game of Odds & Evens.\n");
+	printf("This uses turns generated by code to play the game.\n");
+	printf("This program facilitates player vs computer gameplay and\n");
+	printf("two-player games, and you can enable hints if desired.\n");
+	printf("will label moves as \"path to victory\" (you will win), or\n");
+	printf("\"avoid this move\" (avoid, otherwise smart opponents win).\n");
+	printf("Enter the lowercase letter code as indicated in the prompt\n)");
+	printf("To use the simulator, make moves, backtrack, etc. Enjoy!\n");
+	printf("%s\n", BANNER);
+	
+	/* Choice of player number */
+	printf("Player vs PC (1) or two-player game (2) ? >> ");
+	int input = 0;
+	while ((scanf("%d", &input)) != 1 && (input != 1 || input != 2));
+	
+	/* Choice of hints */
+	int hints;
+	printf("Would you like hints (y) or none? >> ");
+	while ((scanf("%c", &c)) != 1 || !isalpha(c));
+	hints = (c == Y_CHAR) ? TRUE : FALSE;
+	
+	/* Start actual game navigator */
+	if (input == 1) {	/* One player AI functionality */
+		printf("Would you like to go first (y) or not? >> ");
+		while ((scanf("%c", &c)) != 1 || !isalpha(c));
+		printf("\nLET THE GAME BEGIN....\n");
+		if (c == Y_CHAR) {
+			
+			simulator(new_game, hints, TRUE, TRUE, FALSE);
+		} else {
+			simulator(new_game, hints, TRUE, TRUE, TRUE);
+		}
+	} else {	/* 2 player functionality */
+		printf("\nLET THE GAME BEGIN....\n");
+		simulator(new_game, hints, TRUE, FALSE, FALSE);
+	}
+	
+	free_tree(new_game, TRUE);
 	return 0;
 }
 
-/** Function definitions **/
+/**==========================================================================**/
+/**===========================FUNCTION DEFINITIONS===========================**/
+/**==========================================================================**/
 
-/* Generating children */
-void generate_children(turn_t *parent, int depth) {
-	assert(parent);
-	/* Find the children on ith layer at an increasing depth recursively */
-	int i;
-	for (i = 0; i < depth; i++) {
-		traverse_and_create(parent);
-	}
-}
-
-/* Recursively goes down to find endpoints and expands from there */
-void traverse_and_create(turn_t *parent) {
-	assert(parent);
-	/* If a win scenario, don't need to traverse more */
-	if (parent->win_state != EMPTY_STATE) {
-		return;
-	}
-	/* If no children, make them, else, continue traversing */
-	if (parent->num_children == EMPTY_STATE) {
-		create_children(parent);
-		assess_children(parent);
-		return;
-	} else {
-		int i;
-		for (i = 0; i < parent->num_children; i++) {
-			traverse_and_create(parent->children[i]);
-		}
-	}
-}
-
-/* Kill all siblings and their ancestors excl choice, update parent */
-void reduce_siblings(turn_t *parent, turn_t *choice) {
-	assert(parent);
-	assert(choice);
-	assert(parent->num_children != EMPTY_STATE);
-	if (parent->num_children == 1) {
-		return;
-	}
-
-	int i;
-	turn_t *tmp;
-	for (i = 0; i < parent->num_children; i++) {
-		tmp = parent->children[i];
-		if (tmp != choice) {
-			/* printf("Freeing %p...\n", tmp); */
-			free_tree(tmp);
-		}
-	}
-	
-	/* Substitute array of children with just winning child */
-	realloc(parent->children, sizeof(turn_t*));
-	*parent->children = choice;
-	kill_count += (parent->num_children - 1);
-	parent->num_children = 1;
-}
-
-/* Check to see if a child wins, reduce child array to single turn_t if so,
-	and return pointer for updating the children array */
-void assess_children(turn_t *parent) {
-	assert(parent);
-	int i;
-	turn_t *child = NULL;
-	for (i = 0; i < parent->num_children; i++) {
-		child = parent->children[i];
-		if (child->move.entry >= 5 && child->win_state != EMPTY_STATE) {
-			/* No siblings needed; free all excl. current (winning) child */
-			reduce_siblings(parent, child);
-						
-			/* Go up a level, update state, check if all are BAD_STATE */
-			parent->dec_state = BAD_STATE;
-			turn_t *grand_parent = parent->parent;
-			int j;
-			for (j = 0; j < grand_parent->num_children; j++) {
-				if (grand_parent->children[j]->dec_state != BAD_STATE) {
-					return;	/* Not all bad yet */
-				}	
-			}
-			turn_t *g_grand_parent = grand_parent->parent;
-			grand_parent->win_state = parent->children[0]->win_state;
-			g_grand_parent->dec_state = BAD_STATE;	/* g_parent is avoided */
-			
-			/*
-			printf("ALL_BAD_STATE\n%s%s\n", BANNER, BANNER);
-			printf("Great_Grand_parent:\n");
-			print_turn(parent->parent->parent, TRUE, TRUE);
-			printf("\nGrand_parent:\n");
-			print_turn(parent->parent, TRUE, TRUE);
-			printf("\nParent (input):\n");
-			print_turn(parent, TRUE, TRUE);
-			printf("\nChild:\n");
-			print_turn(parent->children[0], FALSE, TRUE);
-			*/
-			
-			/* First, reduce BAD_STATES to one */
-			reduce_siblings(grand_parent, parent);	/*NB: could be any child */
-			
-			/* Now re_assess the g_grand_parent layer */
-			assess_children(g_grand_parent);
-			return;
-		}
-	}
-}
-
+/**==============================TURN CREATION===============================**/
 /* Allocates turn_t and returns pointer */
 turn_t *make_empty_turn(void) {
 	turn_t *turn = (turn_t*)malloc(sizeof(turn_t));
-	if (turn == NULL) {
-		printf("%d, killed %d\n", total, kill_count);
-	}
 	assert(turn);
-	total++;
-	turn->move.entry = turn->move.row = turn->move.col = EMPTY_STATE;
+	turn->move.entry = turn->move.row = turn->move.col = EMPTY;
 	turn->parent = NULL;
 	turn->children = NULL;
-	turn->num_children = EMPTY_STATE;
-	turn->win_state = EMPTY_STATE;
-	turn->dec_state = EMPTY_STATE;
+	turn->num_children = EMPTY;
+	turn->win_state = FALSE;
+	turn->bad_state = FALSE;
 	return turn;
-}
-
-/* Finds all children turns for a given parent and links parent to children */
-void create_children(turn_t *parent) {
-	assert(parent);
-	/* Create board, get number of children, get next entry to be put in */
-	board_t curr_board;
-	int curr_num_moves = create_board(parent, curr_board);
-	int num_possible_moves = NUM_SQUARES - curr_num_moves;
-	
-	/* Create nodes for all potential children */
-	turn_t **child_arr = (turn_t**)malloc(num_possible_moves*sizeof(turn_t*));
-	turn_t *new_turn = NULL;
-	int row, col, i = 0;
-	for (row = 0; row < ROWS; row++) {
-		for (col = 0; col < COLS; col++) {
-			if (curr_board[row][col] == EMPTY_STATE) {
-				/* A new move! Create the child and add ptr to children */
-				new_turn = make_empty_turn();
-				assert(new_turn);
-				new_turn->move = (move_t){
-					.row = row, 
-					.col = col, 
-					.entry = next_move(parent)
-				};
-				new_turn->parent = parent;
-				new_turn->win_state = is_game_over(new_turn);
-				*(child_arr+i) = new_turn;
-				i++;
-			}
-		}
-	}
-	assert(num_possible_moves == i);
-	parent->children = child_arr;
-	parent->num_children = num_possible_moves;
-	return;
-}
-
-/* Determines next entry */
-int next_move(turn_t *parent) {
-	assert(parent);
-	if (parent->move.entry == EMPTY_STATE) {
-		return 1;
-	} else {
-		return (parent->move.entry + 1);
-	}
 }
 
 /* Initialises a board_t, adds in max moves (or less) & returns num_moves */
@@ -271,14 +202,14 @@ int create_board(turn_t *turn, board_t stor) {
 	int row, col;
 	for (row = 0; row < ROWS; row++) {
 		for (col = 0; col < COLS; col++) {
-			stor[row][col] = EMPTY_STATE;
+			stor[row][col] = EMPTY;
 		}
 	}
 	
 	/* Backtracks to update board */
 	turn_t *curr = turn;
 	int num_moves = 0;
-	while (curr->move.entry != EMPTY_STATE && num_moves < MAX_MOVES) {
+	while (curr->move.entry != EMPTY && num_moves < MAX_MOVES) {
 		stor[curr->move.row][curr->move.col] = curr->move.entry;
 		assert(curr->parent);
 		curr = curr->parent;
@@ -287,9 +218,15 @@ int create_board(turn_t *turn, board_t stor) {
 	return num_moves;
 }
 
-/**==========================================================================**/
-/**====================PRETTY CONFIDENT IT WORKS BELOW ======================**/
-/**==========================================================================**/
+/* Determines next entry */
+int next_move(turn_t *parent) {
+	assert(parent);
+	if (parent->move.entry == EMPTY) {
+		return 1;
+	} else {
+		return (parent->move.entry + 1);
+	}
+}
 
 /* Identifies a winning turn & returns -1 if none, 0 if even and 1 if odd.
 	It is assumed that only one win condition can be present by game nature. */
@@ -297,7 +234,7 @@ int is_game_over(turn_t *turn) {
 	board_t curr_board;
 	int curr_num_moves = create_board(turn, curr_board);
 	if (curr_num_moves < 3) {
-		return EMPTY_STATE;
+		return FALSE;
 	}
 	
 	int result, i, val_stor[ROWS];
@@ -308,18 +245,14 @@ int is_game_over(turn_t *turn) {
 		val_stor[i] = curr_board[move_row][i];
 	}
 	result = three_in_row(val_stor);
-	if (result != EMPTY_STATE) {
-		return result;
-	}
+	if (result) return result;
 	
 	/* Check col of the move made */
 	for (i = 0; i < COLS; i++) {
 		val_stor[i] = curr_board[i][move_col];
 	}
 	result = three_in_row(val_stor);
-	if (result != EMPTY_STATE) {
-		return result;
-	}
+	if (result) return result;
 	
 	/* Check \ diag if move in it */
 	if (move_row == move_col) {
@@ -327,167 +260,431 @@ int is_game_over(turn_t *turn) {
 			val_stor[i] = curr_board[i][i];
 		}
 		result = three_in_row(val_stor);
-		if (result != EMPTY_STATE) {
-			return result;
-		}	
+		if (result) return result;	
 	}
 	
 	/* Check / diag if move in it */
-	if (move_row == ROWS - move_col) {
+	if (move_row == ROWS - move_col - 1) {
 		for (i = 0; i < COLS; i++) {
-			val_stor[i] = curr_board[i][i];
+			val_stor[i] = curr_board[i][ROWS - i - 1];
 		}
 		result = three_in_row(val_stor);
-		if (result != EMPTY_STATE) {
-			return result;
-		}	
+		if (result) return result;
 	}
 
-	return EMPTY_STATE;
+	return FALSE;
 }
 
 /* Checks if passed int array gives win condition and returns the state */
 int three_in_row(int val_stor[]) {
 	int i;
 	for (i = 1; i < ROWS; i++) {
-		if (val_stor[i-1] == EMPTY_STATE || val_stor[i] == EMPTY_STATE) {
-			return EMPTY_STATE;
+		if (val_stor[i-1] == EMPTY || val_stor[i] == EMPTY) {
+			return FALSE;
 		}
 		if (val_stor[i-1] % BASE != val_stor[i] % BASE) {
-			return EMPTY_STATE;
+			return FALSE;
 		}                            
 	}
-	return (val_stor[0] % BASE == PLAYER_EVEN) ? PLAYER_EVEN : PLAYER_ODD;
+	return TRUE;
 }
 
-/* Prints information for given turn */
-void print_turn(turn_t *turn, int print_children, int board_print) {
+/**=============================GAME SIMULATION==============================**/
+/* Finds all children turns for a given parent and links parent to children */
+void create_children(turn_t *parent) {
+	assert(parent);
+	/* Create board, get number of children, get next entry to be put in */
+	board_t curr_board;
+	int curr_num_moves = create_board(parent, curr_board);
+	int num_possible_moves = NUM_SQUARES - curr_num_moves;
+	
+	/* Create nodes for all potential children */
+	turn_t **child_arr = (turn_t**)malloc(num_possible_moves*sizeof(turn_t*));
+	assert(child_arr);
+	turn_t *new_turn;
+	int entry = next_move(parent);
+	int row, col, i = 0;
+	for (row = 0; row < ROWS; row++) {
+		for (col = 0; col < COLS; col++) {
+			if (curr_board[row][col] == EMPTY) {
+				/* A new move! Create the child and add ptr to children */
+				new_turn = make_empty_turn();
+				assert(new_turn);
+				new_turn->move = (move_t){
+					.row = row, 
+					.col = col, 
+					.entry = entry
+				};
+				new_turn->parent = parent;
+				new_turn->win_state = is_game_over(new_turn);
+				*(child_arr+i) = new_turn;
+				i++;
+			}
+		}
+	}
+	parent->children = child_arr;
+	parent->num_children = num_possible_moves;
+	return;
+}
+
+/* If a winner, renders parent's parent BAD */
+void update_bad_states(turn_t *parent) {
+	assert(parent);
+	if (parent->num_children == EMPTY && parent->win_state) {
+		/* An winning scenario at the frontier of generations */
+		parent->parent->bad_state = TRUE;
+		return;
+	} 
+}
+
+/* Check if all parent's children are BAD, and make it a winner if so */
+void update_win_states(turn_t *parent) {
+	assert(parent);
+	if (parent->num_children && parent->win_state == FALSE) {
+		int i;
+		if (parent->bad_state == FALSE) {
+			/* Need to check if all children are bad or not. */
+			int children_all_bad_state = TRUE;
+			for (i = 0; i < parent->num_children; i++) {
+				if (parent->children[i]->bad_state != TRUE) {
+					children_all_bad_state = FALSE;
+					break;
+				}
+			}
+			if (children_all_bad_state) {
+				parent->win_state = TRUE;
+				if (parent->parent != NULL) {
+					parent->parent->bad_state = TRUE;
+				}
+			}		
+		}
+	}
+}
+
+/* Recursively goes down to find endpoints and creates new turns */
+void traverse_and_create(turn_t *parent) {
+	assert(parent);
+	if (parent->win_state || parent->bad_state) {
+		if (parent->move.entry != EMPTY) return;
+	}
+	if (parent->num_children == EMPTY) {
+		create_children(parent);
+		return;
+	} else {
+		int i;
+		for (i = 0; i < parent->num_children; i++) {
+			traverse_and_create(parent->children[i]);
+		}
+	}
+}
+
+/* Recursion to find tree endpoints and updates win/bad states from bottom up */
+void traverse_and_update(turn_t *parent) {
+	assert(parent);
+	if (parent->num_children) {
+		int i;
+		for (i = 0; i < parent->num_children; i++) {
+			traverse_and_update(parent->children[i]);
+		}
+	}
+	update_bad_states(parent);
+	update_win_states(parent);
+}
+
+/* Generate children depth extra layers starting at root */
+void generate_children(turn_t *root, int depth) {
+	assert(root);
+	/* Generate the children at endpoints of tree, depth times */
+	int i;
+	for (i = 0; i < depth; i++) {
+		traverse_and_create(root);
+		traverse_and_update(root);
+	}
+}
+
+/* Free turn_t if free_root and all below it recursively */
+void free_tree(turn_t *root, int free_root) {
+	assert(root);
+	int i;
+	for (i = 0; i < root->num_children; i++) {
+		free_tree(root->children[i], TRUE);
+	}
+	if (free_root) {
+		free(root);
+	}
+}
+	
+/**============================GAME EXPLORATION==============================**/
+
+/* Turn navigation */
+int simulator(turn_t *root, int hints, int board_print, int one_player, 
+		int comp_turn) {
+	assert(root);
+	turn_t *curr = root;
+	printf("%s", BANNER);
+	/* Computer moves */
+	if (one_player && comp_turn) {
+		printf("COMPUTER MAKES A MOVE...\n");
+		generate_children(curr, 1);
+		curr = best_child(curr).best;
+		return simulator(curr, hints, TRUE, one_player, !comp_turn);
+	}
+	/* Handling finished games */
+	if (!root->num_children && root->win_state) {
+		printf("GAME OVER... ");
+		if (!one_player && (root->move.entry % BASE)) {
+			printf("ODD WINS!");
+		} else if (!one_player) {
+			printf("EVEN WINS!");
+		}
+		if (one_player && !comp_turn) {
+			printf("... AND HUMANITY WON! AI CANNOT USURP US!\n");
+		}
+		return EXIT_SUCCESS;
+	}
+	print_turn(curr, (hints && board_print), board_print, hints);
+	
+	/* User input handler and resolver */
+	printf("Move (m) back (b) print (p) help (h) quit (q) automatic (o) >> ");
+	int c;
+	while((c = getchar()) != EOF) {
+		if (!isalpha(c)) continue;
+		if (c == 'p') return simulator(curr, hints, TRUE, one_player, comp_turn);
+		if (c == 'b') {
+			if (curr->parent != NULL) curr = curr->parent;
+			return simulator(curr, hints, TRUE, one_player, comp_turn);
+		} else if (c == 'q') {
+			printf("Thank you for playing :)\n");
+			return EXIT_SUCCESS;
+		} else if (c == 'h') {
+			help_information();
+			return simulator(curr, hints, FALSE, one_player, comp_turn);
+		} else if (c == 'g') {
+			int depth;
+			printf("Enter depth of generation: ");
+			scanf("%d", &depth);
+			generate_children(curr, depth);
+			return simulator(curr, hints, FALSE, one_player, comp_turn);
+		} else if (c == 'o' && hints) {
+			printf("Playing strongest move...\n");
+			generate_children(curr, 1);
+			curr = best_child(curr).best;
+			return simulator(curr, hints, FALSE, one_player, !comp_turn);
+		} else if (c == 'm') {
+			generate_children(curr, 1);
+			printf("Enter move (row x col): ");
+			int row, col;
+			row = col = BAD_ENTRY;
+			scanf("%d x %d", &row, &col);
+			/* Look up user entry in children */
+			int i;
+			for (i = 0; i < curr->num_children; i++) {
+				turn_t *tmp = curr->children[i];
+				if (tmp->move.entry == next_move(curr) &&
+						tmp->move.row == row && tmp->move.col == col) {
+					return simulator(tmp, hints, TRUE, one_player, !comp_turn);
+				}
+			}
+			printf("Invalid move...\n");
+			return simulator(curr, hints, FALSE, one_player, comp_turn);
+		}
+	}
+	return EXIT_SUCCESS;
+}
+						
+/* Determines best option for opponent, and the depth from parent, as struct */
+/* Note: if many children with winning tags, does not compare them */
+best_child_t best_child(turn_t *parent) {
+	assert(parent);
+	int i;
+	turn_t *tmp;
+	best_child_t tmp_best = {.best = NULL, .depth = 0};
+	best_child_t curr_best = tmp_best;
+	for (i = 0; i < parent->num_children; i++) {
+		tmp = parent->children[i];
+		if (tmp->win_state) {	/* Child will lead to a win; this is best */
+			if (tmp->num_children) {
+				curr_best = best_child(tmp);
+				curr_best.best = tmp;
+				break;
+			} else {
+				curr_best = (best_child_t) {.best = tmp, .depth = 0};
+				break;
+			}
+		} else if (tmp->bad_state) {	/* Bad; avoid at all cost */
+			continue;
+		} else if (curr_best.best == NULL) {	/* First non_bad, non_win */
+			/* Calculates best option for player using PARENT, i.e. worst 
+				move for opponent */
+			curr_best = best_child(tmp);	
+			curr_best.best = tmp;
+		} else {
+			tmp_best = best_child(tmp);
+			tmp_best.best = tmp;
+			/* Since the best_child here determines the path fastest for the 
+				parent, and not opponent, choose worst of tmp and curr_best */
+			if (tmp_best.depth > curr_best.depth) curr_best = tmp_best;
+		}
+	}
+	if (curr_best.best == NULL) {/* All bad children; pick the least worst */
+		for (i = 0; i < parent->num_children; i++) {
+			tmp = parent->children[i];
+			if (curr_best.best == NULL) {	/* First bad */
+				curr_best = best_child(tmp);	
+				curr_best.best = tmp;
+			} else {	/* Compare curr_best and tmp */
+				best_child_t tmp_best = best_child(tmp);
+				tmp_best.best = tmp;
+				if (tmp_best.depth > curr_best.depth) curr_best = tmp_best;
+			}
+		}
+	}
+	curr_best.depth++;
+	return curr_best;
+}
+
+/**===============================PRINT INFO=================================**/
+/* Prints information for a given turn */
+void print_turn(turn_t *turn, int print_children, int board_print, int hints) {
 	assert(turn);
-	printf("Me: %p \t Parent: %p\n", turn, turn->parent);
-	print_move(turn);
 	if (board_print) {
 		print_board(turn);
 	}
-	printf("# of children: %d\n", turn->num_children);
 	if (print_children) {
+		printf("# of children: %d\n", turn->num_children);
 		int i;
 		for (i = 0; i < turn->num_children; i++) {
 			turn_t *child = turn->children[i];
 			assert(child);
-			printf("--> One @ %p, ", child);
-			print_move(child);
+			printf("--> ");
+			print_move(child, hints);
 		}
 	}
 }
 
-/* Prints board for a given turn */
+/* Prints board for a given turn with headings */
 void print_board(turn_t *turn) {
 	assert(turn);
 	board_t curr_board;
 	create_board(turn, curr_board);
 	int row, col;
+	printf("x | 0  1  2\n--|---------\n");
 	for (row = 0; row < ROWS; row++) {
+		printf("%d | ", row);
 		for (col = 0; col < COLS; col++) {
 			int entry = curr_board[row][col];
-			if (entry == EMPTY_STATE) {
-				entry = 0;
-			}
-			printf("%d ", entry);
+			printf("%-2d ", entry);
 		}
 		printf("\n");
 	}
 }
 
 /* Prints move for a given turn */
-void print_move(turn_t *turn) {
+void print_move(turn_t *turn, int hints) {
 	assert(turn);
-	printf("Move: %d @ %d x %d (%d) (%d)\n", turn->move.entry, 
-			turn->move.row, turn->move.col, turn->win_state, turn->dec_state);
+	printf("Move: %d @ %d x %d", turn->move.entry, 	
+		turn->move.row, turn->move.col);
+	if (turn->win_state && hints) printf(" (PATH TO VICTORY)");
+	if (turn->bad_state && hints) printf(" (AVOID THIS MOVE)");
+	printf("\n");
 }
 
-/* Gets a random path aiming for depth */
-turn_t *random_turn(turn_t *root, int depth) {
-	/* Go through up to depth layers taking random child as you go */
-	int num_children, depth_count = 0, rand_child;
-	turn_t *curr = root;
-	num_children = curr->num_children;
-	while (num_children > 0 && depth_count <= depth) {
-		rand_child = rand() % num_children;
-		curr = curr->children[rand_child];
-		assert(curr);
-		num_children = curr->num_children;
-		depth_count++;
-	}
-	return curr;
-}
 
-/* Prints the game */
-void print_history(turn_t *turn) {
-	assert(turn);
-	if (turn->parent != NULL) {
-		printf("Cool");
-		print_history(turn->parent);
-	}
-	print_move(turn);
-	print_board(turn);
+/* Help information printer */
+void help_information(void) {
+	printf("- Move: use to enter next move to make\n");
+	printf("--> Enter row #, x, & col #, e.g. 1 x 1 is centre\n");
+	printf("- Back: returns to previous move\n");
+	printf("- Quit: exits simulator\n");
+	printf("- Generate: makes more moves in computer for play\n");
+	printf("- Print: prints turn again\n");
+	printf("- Automatic: makes strongest move IF hints enabled\n");
 	return;
 }
 
-/* Free turn_t and all below it recursively */
-void free_tree(turn_t *root) {
-	assert(root);
-	int i;
-	for (i = 0; i < root->num_children; i++) {
-		free_tree(root->children[i]);
-	}
-	free(root);
-	kill_count += 1;
+/**===============================ANALYTICAL=================================**/
+/* Initialise data_t and return copy */
+data_t *make_empty_data(int num_children) {
+	data_t *new = (data_t*)malloc(sizeof(data_t));
+	assert(new);
+	new->num_children = num_children;	/* serves as an index basket */
+	new->count_num = new->count_win = new->count_bad = 0;
+	return new;
 }
 
-/* Turn navigation */
-int turn_navigator(turn_t *new_game) {
-	if(new_game == NULL) {
-		printf("End of depth!\n");
-		return FALSE;
-	}
-	turn_t *curr = new_game;
-	printf("Move (m), back (b), quit (q) >> ");
-	int c;
-	while((c = getchar()) != EOF) {
-		if (isalpha(c)) {
-			if (c == 'q' || c == 'b' || c == 'm') {
-				break;
-			}
-		}
-	}
-	if (c == 'q') {
-		return FALSE;
-	} else if (c == 'b') {
-		curr = curr->parent;
-	} else if (c == 'm') {
-		printf("Enter move (row x col): ");
-		int row, col;
-		while ((scanf("%d x %d", &row, &col)) != 2);
-		/* Look that up in the children */
+/* Traverse tree by depth and updating child_data structs */
+void traverse_and_analyze(turn_t *parent, int depth, data_t *total, 
+		data_t *depth_total, data_t **depth_sorted) {
+	assert(parent);
+	if (depth > 0) {
+		/* Explore the children */
 		int i;
-		turn_t *tmp;
-		int bad_move = TRUE;
-		for (i = 0; i < new_game->num_children; i++) {
-			tmp = new_game->children[i];
-			if (tmp->move.entry == next_move(new_game) &&
-				tmp->move.row == row && tmp->move.col == col) {
-				curr = tmp;
-				bad_move = FALSE;
-				break;
-			}
+		for (i = 0; i < parent->num_children; i++) {
+			traverse_and_analyze(parent->children[i], depth - 1, total, 
+					depth_total, depth_sorted);
 		}
-		if (bad_move) {
-			printf("Invalid move...\n");
-			return turn_navigator(curr);
+	} else {
+		/* You are at appropriate depth, add where necessary */
+		int num_children = parent->num_children;
+		total->count_num++;
+		depth_total->count_num++;
+		depth_sorted[num_children]->count_num++;
+		if (parent->win_state) {
+			total->count_win++;
+			depth_total->count_win++;
+			depth_sorted[num_children]->count_win++;
+		}
+		if (parent->bad_state) {
+			total->count_bad++;
+			depth_total->count_bad++;
+			depth_sorted[num_children]->count_bad++;
 		}
 	}
-	print_turn(curr, FALSE, TRUE);
-	return turn_navigator(curr);
 }
 
-/** References **/
+/* Prints analytical data */
+void print_depth_data(data_t *depth_total, data_t **depth_sorted) {
+	assert(depth_total);
+	assert(depth_sorted);
+	int i;
+	for (i = 0; i < NUM_SQUARES+1; i++) {
+		if (depth_sorted[i]->count_num == 0) continue;
+		printf("\t(%d)\t%d turns, %d wins, %d bads\n", 
+			depth_sorted[i]->num_children,
+			depth_sorted[i]->count_num,
+			depth_sorted[i]->count_win,
+			depth_sorted[i]->count_bad);
+	}
+	printf("\tTotals:\t%d turns, %d wins, %d bads\n", 
+			depth_total->count_num,
+			depth_total->count_win,
+			depth_total->count_bad);
+}
+
+/* Diagnostics for branching information */
+void branching_data(turn_t *root, int depth) {
+	data_t *total, *depth_total;
+	data_t *depth_sorted[NUM_SQUARES+1];
+	total = make_empty_data(ANY_CHILD);
+	
+	/* Analyze & print layer by layer */
+	int i, j;
+	for (i = 0; i < depth + 1; i++) {
+		printf("Depth: %d\n", i);
+		depth_total = make_empty_data(ANY_CHILD);
+		for (j = 0; j < NUM_SQUARES+1; j++) {
+			depth_sorted[j] = make_empty_data(j);
+		}
+		traverse_and_analyze(root, i, total, depth_total, depth_sorted);
+		print_depth_data(depth_total, depth_sorted);
+		free(depth_total);
+		for (j = 0; j < NUM_SQUARES+1; j++) {
+			free(depth_sorted[j]);
+		}
+	}
+	printf("Grand totals: %d turns, %d wins, %d bads\n", 
+			total->count_num,
+			total->count_win,
+			total->count_bad);
+	free(total);
+}
