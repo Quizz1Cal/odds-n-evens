@@ -470,6 +470,8 @@ int simulator(turn_t *root, int hints, int board_print, int one_player,
             generate_children(curr, 1);
             curr = best_child(curr).best;
             return simulator(curr, hints, TRUE, one_player, !comp_turn);
+        } else if (c == 'o') {
+        	printf("Automatic is disabled when hints is disabled.\n");
         } else if (c == 'm') {
             generate_children(curr, 1);
             printf("Enter move (row x col): ");
