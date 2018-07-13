@@ -1,5 +1,6 @@
 # odds-n-evens
 NOTE: Best viewed with tab 4, no wrap, or just spaces.
+
 This is the first online project that I submitted. As a rough description, this project is an attempted proof of the forceability of "odds & evens" via C.
 Rules of the game:
 - Given a 3x3 square grid (much like tic-tac-toe), players take turns writing numbers (either odd or even, respectively) into squares,  increasing as they go e.g. player 1 writes 1, player 2 2, then 1 3 etc.
