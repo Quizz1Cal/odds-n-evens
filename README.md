@@ -1,5 +1,6 @@
 # odds-n-evens
-First online project that I submitted. As a rough description, this project is an attempted proof of the forceability of "odds & evens" via C.
+NOTE: Best viewed with tab 4, no wrap, or just spaces.
+This is the first online project that I submitted. As a rough description, this project is an attempted proof of the forceability of "odds & evens" via C.
 Rules of the game:
 - Given a 3x3 square grid (much like tic-tac-toe), players take turns writing numbers (either odd or even, respectively) into squares,  increasing as they go e.g. player 1 writes 1, player 2 2, then 1 3 etc.
 - A number disappears 6 moves later e.g. when player 1 writes a 7, the 1 that they initially wrote vanishes AFTER the 7 is written down.
@@ -8,10 +9,7 @@ Rules of the game:
 IMPLEMENTATION HISTORY: 
 - Draft 1: Attempt to create nodes, each storing boards, moves, player tags. This was deemed to be highly inefficient with memory and time. 
 - Draft 2: Attempt to create nodes with reduced memory demand by only storing moves made; boards are implicitly inferred.
+- Draft 3: Attempted to and then foregave deletion of un-necessary pathways. Incorporated a simulator and an "AI" functioanality so that upon execution, a user can play against a computer, or against a second player on same computer (or themselves). 
 
-Problems:
-- Reducing the amount actually generated (memory efficiency)
-- How to implement dynamic array, whilst in a struct
-- Determining overly recurrent cases
-- Keeping paths stored so that 'forced win scenarios' can be remembered
-
+Author: Callum Holmes
+Last Updated: July 2018
