@@ -10,6 +10,8 @@
  *  - The maximum number of numbers each player can have on the board is three.
  *      hence, when player 1 writes a 7, the 1 must be erased AFTER the 7 is 
  *      written down. When player 1 writes 8, the 2 is erased AFTER, etc...
+ *      numbers about to be erased do NOT count for three-in-a-row, e.g.
+ *      2-6-8 is not allowed since the 2 will disappear.
  *  - Aim of game is for one player to get 3 in a row. 
  *  - Ties are permissible at each player's discretion.
  * The program generates board states for a specified depth of generation, and
@@ -232,10 +234,7 @@ int next_move(turn_t *parent) {
 int is_game_over(turn_t *turn) {
     board_t curr_board;
     int curr_num_moves = create_board(turn, curr_board);
-    if (curr_num_moves < 3) {
-        return FALSE;
-    }
-    
+    if (curr_num_moves < 3) return FALSE;
     int result, i, val_stor[ROWS];
     int move_row = turn->move.row, move_col = turn->move.col;
     
@@ -270,7 +269,6 @@ int is_game_over(turn_t *turn) {
         result = three_in_row(val_stor);
         if (result) return result;
     }
-
     return FALSE;
 }
 
