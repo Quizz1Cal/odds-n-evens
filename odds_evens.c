@@ -10,8 +10,6 @@
  *  - The maximum number of numbers each player can have on the board is three.
  *      hence, when player 1 writes a 7, the 1 must be erased AFTER the 7 is 
  *      written down. When player 1 writes 8, the 2 is erased AFTER, etc...
- *      numbers about to be erased do NOT count for three-in-a-row, e.g.
- *      2-6-8 is not allowed since the 2 will disappear.
  *  - Aim of game is for one player to get 3 in a row. 
  *  - Ties are permissible at each player's discretion.
  * The program generates board states for a specified depth of generation, and
@@ -96,7 +94,7 @@ int create_board(turn_t *turn, board_t stor);
 int next_move(turn_t *parent);
 int is_game_over(turn_t *turn);
 int three_in_row(int val_stor[]);
-/* Game simulation */
+/* Game creation */
 void create_children(turn_t *parent);
 void update_win_states(turn_t *parent);
 void update_bad_states(turn_t *parent);
@@ -104,7 +102,7 @@ void traverse_and_create(turn_t *parent);
 void traverse_and_update(turn_t *parent);
 void generate_children(turn_t *root, int depth);
 void free_tree(turn_t *root, int free_root);
-/* Game exploration */
+/* Game simulation */
 int simulator(turn_t *new_game, int hints, int board_print, int one_player, 
         int comp_turn);
 best_child_t best_child(turn_t *parent);
@@ -177,11 +175,10 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-/**==========================================================================**/
 /**===========================FUNCTION DEFINITIONS===========================**/
-/**==========================================================================**/
 
 /**==============================TURN CREATION===============================**/
+
 /* Allocates turn_t and returns pointer */
 turn_t *make_empty_turn(void) {
     turn_t *turn = (turn_t*)malloc(sizeof(turn_t));
@@ -228,13 +225,15 @@ int next_move(turn_t *parent) {
         return (parent->move.entry + 1);
     }
 }
-
 /* Identifies a winning turn & returns -1 if none, 0 if even and 1 if odd.
     It is assumed that only one win condition can be present by game nature. */
 int is_game_over(turn_t *turn) {
     board_t curr_board;
     int curr_num_moves = create_board(turn, curr_board);
-    if (curr_num_moves < 3) return FALSE;
+    if (curr_num_moves < 3) {
+        return FALSE;
+    }
+    
     int result, i, val_stor[ROWS];
     int move_row = turn->move.row, move_col = turn->move.col;
     
@@ -269,6 +268,7 @@ int is_game_over(turn_t *turn) {
         result = three_in_row(val_stor);
         if (result) return result;
     }
+
     return FALSE;
 }
 
@@ -287,6 +287,7 @@ int three_in_row(int val_stor[]) {
 }
 
 /**=============================GAME SIMULATION==============================**/
+
 /* Finds all children turns for a given parent and links parent to children */
 void create_children(turn_t *parent) {
     assert(parent);
@@ -410,7 +411,7 @@ void free_tree(turn_t *root, int free_root) {
         free(root);
     }
 }
-    
+    s
 /**============================GAME EXPLORATION==============================**/
 
 /* Turn navigation */
@@ -494,8 +495,8 @@ int simulator(turn_t *root, int hints, int board_print, int one_player,
     return EXIT_SUCCESS;
 }
                         
-/* Determines best option for opponent, and the depth from parent, as struct */
-/* Note: if many children with winning tags, does not compare them */
+/* Determines best option for opponent, and the depth from parent, as struct 
+ * Note: if many children with winning tags, does not compare them */
 best_child_t best_child(turn_t *parent) {
     assert(parent);
     int i;
@@ -546,6 +547,7 @@ best_child_t best_child(turn_t *parent) {
 }
 
 /**===============================PRINT INFO=================================**/
+
 /* Prints information for a given turn */
 void print_turn(turn_t *turn, int print_children, int board_print, int hints) {
     assert(turn);
@@ -605,6 +607,7 @@ void help_information(void) {
 }
 
 /**===============================ANALYTICAL=================================**/
+
 /* Initialise data_t and return copy */
 data_t *make_empty_data(int num_children) {
     data_t *new = (data_t*)malloc(sizeof(data_t));
