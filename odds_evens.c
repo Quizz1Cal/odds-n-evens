@@ -286,7 +286,7 @@ int three_in_row(int val_stor[]) {
     return TRUE;
 }
 
-/**=============================GAME SIMULATION==============================**/
+/**==============================GAME CREATION===============================**/
 
 /* Finds all children turns for a given parent and links parent to children */
 void create_children(turn_t *parent) {
@@ -411,8 +411,8 @@ void free_tree(turn_t *root, int free_root) {
         free(root);
     }
 }
-    s
-/**============================GAME EXPLORATION==============================**/
+    
+/**============================GAME SIMULATION===============================**/
 
 /* Turn navigation */
 int simulator(turn_t *root, int hints, int board_print, int one_player, 
@@ -471,6 +471,7 @@ int simulator(turn_t *root, int hints, int board_print, int one_player,
             return simulator(curr, hints, TRUE, one_player, !comp_turn);
         } else if (c == 'o') {
         	printf("Automatic is disabled when hints is disabled.\n");
+        	return simulator(curr, hints, FALSE, one_player, comp_turn);
         } else if (c == 'm') {
             generate_children(curr, 1);
             printf("Enter move (row x col): ");
