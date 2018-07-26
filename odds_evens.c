@@ -470,15 +470,15 @@ int simulator(turn_t *root, int hints, int board_print, int one_player,
             curr = best_child(curr).best;
             return simulator(curr, hints, TRUE, one_player, !comp_turn);
         } else if (c == 'o') {
-        	printf("Automatic is disabled when hints is disabled.\n");
-        	return simulator(curr, hints, FALSE, one_player, comp_turn);
+            printf("Automatic is disabled when hints is disabled.\n");
+            return simulator(curr, hints, FALSE, one_player, comp_turn);
         } else if (c == 'm') {
             generate_children(curr, 1);
             printf("Enter move (row x col): ");
             int row, col;
             row = col = BAD_ENTRY;
             while (scanf("%dx%d", &row, &col) != 2) {
-            	printf("Invalid format, must be row# x col#...\n");
+                printf("Invalid format, must be row# x col#...\n");
             };
             /* Look up user entry in children */
             int i;
