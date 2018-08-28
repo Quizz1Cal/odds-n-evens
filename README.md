@@ -1,7 +1,7 @@
 # odds-n-evens
 NOTE: Best viewed with tab 4, no wrap, or just spaces.
 
-odds_evens_one_file.c has the same functionality as the compilation of all other files into main using the makefile.
+*odds_evens_one_file.c has the same functionality as the compilation of all other files into main using the makefile.*
 
 This is the first online project that I submitted. As a rough description, this project is an attempted proof of the forceability of "odds & evens" via C.
 Rules of the game:
