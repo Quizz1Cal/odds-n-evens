@@ -14,8 +14,8 @@
 #define EMPTY 0
 #define BASE 2
 
-typedef int row_t[ROWS];
-typedef row_t board_t[COLS];    /* i.e. board_t[ROW#][COL#] */
+typedef int row_t[COLS];
+typedef row_t board_t[ROWS];    /* i.e. board_t[ROW#][COL#] */
 
 /* Move information struct */
 typedef struct {
@@ -26,10 +26,10 @@ typedef struct {
 typedef struct turn_s turn_t;   
 struct turn_s {
     move_t move;
-    turn_t *parent;
     int num_children;
     int win_state;      /* Flag if a turn wins */
-    int bad_state;      /* Flag TRUE if chooosing guarantees opponent wins */
+    int bad_state;      /* Flag TRUE if choosing guarantees opponent wins */
+    turn_t *parent;
     turn_t **children;
 };
 
@@ -45,6 +45,7 @@ int create_board(turn_t *turn, board_t stor);
 int next_move(turn_t *parent);
 int is_game_over(turn_t *turn);
 int three_in_row(int val_stor[]);
+
 /* Game creation */
 void create_children(turn_t *parent);
 void update_win_states(turn_t *parent);
