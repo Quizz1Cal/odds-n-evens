@@ -48,6 +48,7 @@ int next_move(turn_t *parent) {
         return (parent->move.entry + 1);
     }
 }
+
 /* Identifies a winning turn & returns -1 if none, 0 if even and 1 if odd.
     It is assumed that only one win condition can be present by game nature. */
 int is_game_over(turn_t *turn) {
@@ -143,6 +144,7 @@ void create_children(turn_t *parent) {
             }
         }
     }
+    
     parent->children = child_arr;
     parent->num_children = num_possible_moves;
     return;
@@ -161,24 +163,22 @@ void update_bad_states(turn_t *parent) {
 /* Check if all parent's children are BAD, and make it a winner if so */
 void update_win_states(turn_t *parent) {
     assert(parent);
-    if (parent->num_children && parent->win_state == FALSE) {
-        int i;
-        if (parent->bad_state == FALSE) {
-            /* Need to check if all children are bad or not. */
-            int children_all_bad_state = TRUE;
-            for (i = 0; i < parent->num_children; i++) {
-                if (parent->children[i]->bad_state != TRUE) {
-                    children_all_bad_state = FALSE;
-                    break;
-                }
+    if (parent->num_children && parent->win_state == FALSE && 
+            parent->bad_state == FALSE) {
+        /* Need to check if all children are bad or not. */
+        int i, children_all_bad_state = TRUE;
+        for (i = 0; i < parent->num_children; i++) {
+            if (parent->children[i]->bad_state != TRUE) {
+                children_all_bad_state = FALSE;
+                break;
             }
-            if (children_all_bad_state) {
-                parent->win_state = TRUE;
-                if (parent->parent != NULL) {
-                    parent->parent->bad_state = TRUE;
-                }
-            }       
         }
+        if (children_all_bad_state) {
+            parent->win_state = TRUE;
+            if (parent->parent != NULL) {
+                parent->parent->bad_state = TRUE;
+            }
+        }       
     }
 }
 
