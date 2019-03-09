@@ -1,6 +1,7 @@
 # odds-n-evens
 
 **Author**: Callum Holmes
+
 **Creator of game (to my knowledge)**: Thomas in my MAST20009 tutorial
 
 NOTE: Best viewed with tab 4, no wrap, or just spaces.
