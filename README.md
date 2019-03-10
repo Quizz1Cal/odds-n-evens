@@ -15,6 +15,17 @@ This is the first online project that I submitted. As a rough description, this 
 - A number disappears 6 moves later e.g. when player 1 writes a 7, the 1 that they initially wrote vanishes AFTER the 7 is written down.
 - Aim of game is for a player to get 3 in a row. No ties allowed. 
 
+### Contents
+- *main.c*: Hub for code execution
+- *game_struct.c*: Implements node structs, boards, moves, generation and AI algorithm
+- *Interface.c*: Allows for command-line friendly interaction.
+- *Analytic.c*: Used to debug.
+
+### Coding approach
+The game utilises an adaptation of the minimax algorithm to find winning moves, looking at a node depth of about 9 moves at each decision state. At the time I had no knowledge of the minimax algorithm but still somehow discovered and used the approach when implementing this project, which is pretty cool!
+
+Board states are implicitly stored in a tree of turns i.e. moves - to derive a board, the code backtracks 9 steps to obtain the 9 most recently played moves. 
+
 ### Implementation History
 - Draft 1: Attempt to create nodes, each storing boards, moves, player tags. This was deemed to be highly inefficient with memory and time. 
 - Draft 2: Attempt to create nodes with reduced memory demand by only storing moves made; boards are implicitly inferred.
