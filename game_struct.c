@@ -18,7 +18,7 @@ turn_t *make_empty_turn(void) {
 /* Initialises a board_t, adds in max moves (or less) & returns num_moves */
 int create_board(turn_t *turn, board_t stor) {
     assert(turn);
-    
+
     /* Initialise empty board */
     int row, col;
     for (row = 0; row < ROWS; row++) {
@@ -26,7 +26,7 @@ int create_board(turn_t *turn, board_t stor) {
             stor[row][col] = EMPTY;
         }
     }
-    
+
     /* Backtracks to update board */
     turn_t *curr = turn;
     int num_moves = 0;
@@ -57,33 +57,33 @@ int is_game_over(turn_t *turn) {
     if (curr_num_moves < 3) {
         return FALSE;
     }
-    
+
     int result, i, val_stor[ROWS];
     int move_row = turn->move.row, move_col = turn->move.col;
-    
+
     /* Check row of the move made */
     for (i = 0; i < COLS; i++) {
         val_stor[i] = curr_board[move_row][i];
     }
     result = three_in_row(val_stor);
     if (result) return result;
-    
+
     /* Check col of the move made */
-    for (i = 0; i < COLS; i++) {
+    for (i = 0; i < ROWS; i++) {
         val_stor[i] = curr_board[i][move_col];
     }
     result = three_in_row(val_stor);
     if (result) return result;
-    
+
     /* Check \ diag if move in it */
     if (move_row == move_col) {
         for (i = 0; i < COLS; i++) {
             val_stor[i] = curr_board[i][i];
         }
         result = three_in_row(val_stor);
-        if (result) return result;  
+        if (result) return result;
     }
-    
+
     /* Check / diag if move in it */
     if (move_row == ROWS - move_col - 1) {
         for (i = 0; i < COLS; i++) {
@@ -105,7 +105,7 @@ int three_in_row(int val_stor[]) {
         }
         if (val_stor[i-1] % BASE != val_stor[i] % BASE) {
             return FALSE;
-        }                            
+        }
     }
     return TRUE;
 }
@@ -119,7 +119,7 @@ void create_children(turn_t *parent) {
     board_t curr_board;
     int curr_num_moves = create_board(parent, curr_board);
     int num_possible_moves = NUM_SQUARES - curr_num_moves;
-    
+
     /* Create nodes for all potential children */
     turn_t **child_arr = (turn_t**)malloc(num_possible_moves*sizeof(turn_t*));
     assert(child_arr);
@@ -132,9 +132,10 @@ void create_children(turn_t *parent) {
                 /* A new move! Create the child and add ptr to children */
                 new_turn = make_empty_turn();
                 assert(new_turn);
+                /* TODO: Unsure if cast to move_t is necessary */
                 new_turn->move = (move_t){
-                    .row = row, 
-                    .col = col, 
+                    .row = row,
+                    .col = col,
                     .entry = entry
                 };
                 new_turn->parent = parent;
@@ -144,7 +145,7 @@ void create_children(turn_t *parent) {
             }
         }
     }
-    
+
     parent->children = child_arr;
     parent->num_children = num_possible_moves;
     return;
@@ -157,13 +158,13 @@ void update_bad_states(turn_t *parent) {
         /* An winning scenario at the frontier of generations */
         parent->parent->bad_state = TRUE;
         return;
-    } 
+    }
 }
 
 /* Check if all parent's children are BAD, and make it a winner if so */
 void update_win_states(turn_t *parent) {
     assert(parent);
-    if (parent->num_children && parent->win_state == FALSE && 
+    if (parent->num_children && parent->win_state == FALSE &&
             parent->bad_state == FALSE) {
         /* Need to check if all children are bad or not. */
         int i, children_all_bad_state = TRUE;
@@ -178,7 +179,7 @@ void update_win_states(turn_t *parent) {
             if (parent->parent != NULL) {
                 parent->parent->bad_state = TRUE;
             }
-        }       
+        }
     }
 }
 
@@ -223,7 +224,7 @@ void generate_children(turn_t *root, int depth) {
     }
 }
 
-/* Determines best option for opponent, and the depth from parent, as struct 
+/* Determines best option for opponent, and the depth from parent, as struct
  * Note: if many children with winning tags, does not compare them */
 best_child_t best_child(turn_t *parent) {
     assert(parent);
@@ -245,14 +246,14 @@ best_child_t best_child(turn_t *parent) {
         } else if (tmp->bad_state) {    /* Bad; avoid at all cost */
             continue;
         } else if (curr_best.best == NULL) {    /* First non_bad, non_win */
-            /* Calculates best option for player using PARENT, i.e. worst 
+            /* Calculates best option for player using PARENT, i.e. worst
                 move for opponent */
-            curr_best = best_child(tmp);    
+            curr_best = best_child(tmp);
             curr_best.best = tmp;
         } else {
             tmp_best = best_child(tmp);
             tmp_best.best = tmp;
-            /* Since the best_child here determines the path fastest for the 
+            /* Since the best_child here determines the path fastest for the
                 parent, and not opponent, choose worst of tmp and curr_best */
             if (tmp_best.depth > curr_best.depth) curr_best = tmp_best;
         }
@@ -261,7 +262,7 @@ best_child_t best_child(turn_t *parent) {
         for (i = 0; i < parent->num_children; i++) {
             tmp = parent->children[i];
             if (curr_best.best == NULL) {   /* First bad */
-                curr_best = best_child(tmp);    
+                curr_best = best_child(tmp);
                 curr_best.best = tmp;
             } else {    /* Compare curr_best and tmp */
                 best_child_t tmp_best = best_child(tmp);
